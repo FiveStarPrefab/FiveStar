@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <meta charset="utf-8">
   <title>Five Star Electric | C1 Workflow Dashboard</title>
 
@@ -21,6 +22,11 @@
 
   <style>
     body {
+  font-family: 'Inter', sans-serif;
+  color: #f0f0f0;
+
+  background-color: #0b2545;
+
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f0f2f5;
       padding: 30px;
@@ -50,7 +56,26 @@
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    .summary-box {
+    
+.summary-box {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.8s ease-in;
+  opacity: 0;
+}
+.summary-box.visible {
+  opacity: 1;
+}
+.summary-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+  background-color: #113b5a;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+
       text-align: center;
     }
     .summary-box h3 {
@@ -121,7 +146,10 @@
     <h2>Five Star Electric - C1 Workflow Dashboard</h2>
   </div>
 
-  <div class="summary-metrics">
+  
+
+
+<div class="summary-metrics">
     <div class="summary-box"><h3>📋 Total Tasks</h3><span id="totalTasks">0</span></div>
     <div class="summary-box"><h3>🔄 In Progress</h3><span id="inprogressTasks">0</span></div>
     <div class="summary-box"><h3>🛠️ Needs Review</h3><span id="needsReviewTasks">0</span></div>
@@ -225,5 +253,45 @@ createdRow: function (row, data, dataIndex) {
       }
     });
   </script>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.summary-box').forEach((box, i) => {
+    setTimeout(() => box.classList.add('visible'), i * 150);
+  });
+});
+</script>
+
+<script>
+function populateBuildingFilter(table) {
+  const column = table.column("Building Level:name");
+  const uniqueValues = [...new Set(column.data().toArray())].filter(Boolean).sort();
+  const select = document.getElementById("buildingFilter");
+
+  uniqueValues.forEach(val => {
+    const option = document.createElement("option");
+    option.value = val;
+    option.textContent = val;
+    select.appendChild(option);
+  });
+
+  select.addEventListener("change", () => {
+    const value = select.value;
+    column.search(value ? '^' + value + '$' : '', true, false).draw();
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const interval = setInterval(() => {
+    if (window.jQuery && $.fn.dataTable.isDataTable('#dashboardTable')) {
+      const table = $('#dashboardTable').DataTable();
+      populateBuildingFilter(table);
+      clearInterval(interval);
+    }
+  }, 200);
+});
+</script>
 </body>
+
+
 </html>
