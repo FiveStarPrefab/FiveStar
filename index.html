@@ -1,60 +1,149 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>C1 Level Workflow Dashboard</title>
+  <title>Five Star Electric | C1 Workflow Dashboard</title>
+
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <link rel="stylesheet"
+  <link rel="stylesheet" 
         href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" 
+        href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
       padding: 30px;
-      background-color: #f4f6f8;
     }
-    h2 {
-      text-align: center;
-      color: #333;
+    .branding {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
     }
-    #dashboard_wrapper {
-      margin-top: 30px;
+    .branding img {
+      height: 80px;
+    }
+    .branding h2 {
+      color: #003366;
+      font-size: 1.8em;
+      margin: 0;
     }
     table.dataTable thead {
       background-color: #007bff;
       color: white;
     }
     table.dataTable tbody tr:nth-child(even) {
-      background-color: #f2f2f2;
+      background-color: #f9f9f9;
     }
     table.dataTable tbody tr:hover {
-      background-color: #e0eaff;
+      background-color: #e0ecff;
     }
     .dataTables_filter input {
-      border-radius: 4px;
       border: 1px solid #ccc;
+      border-radius: 4px;
       padding: 5px;
+    }
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 5px;
+      color: white;
+      display: inline-block;
+      font-size: 0.8em;
+    }
+    .PENDING { background-color: #ffc107; }
+    .COMPLETE { background-color: #28a745; }
+    .INPROGRESS { background-color: #17a2b8; }
+    .progress-bar {
+      background-color: #e9ecef;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 18px;
+      width: 100%;
+    }
+    .progress-fill {
+      background-color: #28a745;
+      height: 100%;
+      text-align: center;
+      color: white;
+      font-size: 0.75em;
+      line-height: 18px;
+    }
+    tfoot input {
+      width: 100%;
+      padding: 3px;
+      box-sizing: border-box;
     }
   </style>
 </head>
 <body>
-  <h2>C1 Level Workflow Dashboard</h2>
-  <table id="dashboard" class="display nowrap" style="width:100%"></table>
+  <div class="branding">
+    <img src="five_star_logo.png" alt="Five Star Electric Logo">
+    <h2>Five Star Electric - C1 Workflow Dashboard</h2>
+  </div>
+
+  <table id="dashboard" class="display nowrap" style="width:100%">
+    <tfoot></tfoot>
+  </table>
 
   <script>
+    function createProgressBar(val) {
+      let percent = parseInt(val);
+      if (isNaN(percent)) return "";
+      return `<div class='progress-bar'><div class='progress-fill' style='width: ${percent}%;'>${percent}%</div></div>`;
+    }
+
+    function createStatusBadge(val) {
+      if (!val) return "";
+      let cls = val.toUpperCase().replace(/\s/g, '');
+      return `<span class='status-badge ${cls}'>${val}</span>`;
+    }
+
     Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR1iPOsj_fVoAXAqnCD3JKDuNtzgj9gSkHYqP1kbBH4-O598458EaB0T8fOTrcDxhEIgPbTHPd4G5Eq/pub?gid=1736456295&single=true&output=csv", {
       download: true,
       header: true,
       complete: function(results) {
-        const data = results.data.filter(row => Object.values(row).some(cell => cell)); // remove empty rows
-        const columns = Object.keys(data[0]).map(col => ({ title: col, data: col }));
+        const raw = results.data.filter(row => Object.values(row).some(cell => cell));
+        const columns = Object.keys(raw[0]).map(col => {
+          return {
+            title: col,
+            data: col,
+            render: function(data, type, row) {
+              if (col.toLowerCase().includes('status')) return createStatusBadge(data);
+              if (col.toLowerCase().includes('progress') || col.includes('%')) return createProgressBar(data);
+              return data;
+            }
+          };
+        });
+
         $('#dashboard').DataTable({
-          data: data,
+          data: raw,
           columns: columns,
           scrollX: true,
-          responsive: true
+          responsive: true,
+          dom: 'Bfrtip',
+          buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+          initComplete: function () {
+            this.api().columns().every(function () {
+              var column = this;
+              var input = document.createElement("input");
+              $(input).appendTo($(column.footer()).empty())
+                      .on('keyup change', function () {
+                        column.search($(this).val(), false, false, true).draw();
+                      });
+            });
+          }
         });
       }
     });
