@@ -122,10 +122,11 @@
   </div>
 
   <div class="summary-metrics">
-    <div class="summary-box"><h3>Total Tasks</h3><span id="totalTasks">0</span></div>
-    <div class="summary-box"><h3>Completed</h3><span id="completeTasks">0</span></div>
-    <div class="summary-box"><h3>Pending</h3><span id="pendingTasks">0</span></div>
-    <div class="summary-box"><h3>In Progress</h3><span id="inprogressTasks">0</span></div>
+    <div class="summary-box"><h3>📋 Total Tasks</h3><span id="totalTasks">0</span></div>
+    <div class="summary-box"><h3>🔄 In Progress</h3><span id="inprogressTasks">0</span></div>
+    <div class="summary-box"><h3>🛠️ Needs Review</h3><span id="needsReviewTasks">0</span></div>
+    <div class="summary-box"><h3>✅ Completed</h3><span id="completeTasks">0</span></div>
+    <div class="summary-box"><h3>⛔ Overdue</h3><span id="overdueTasks">0</span></div>
   </div>
 
   <table id="dashboard" class="display nowrap" style="width:100%">
@@ -166,13 +167,19 @@
       complete: function(results) {
         const raw = results.data.filter(row => Object.values(row).some(cell => cell));
         let total = raw.length;
-        let pending = raw.filter(r => r["Status"]?.toUpperCase().includes("PENDING")).length;
+        let needsReview = raw.filter(r => r["Status"]?.toUpperCase().includes("NEEDS REVIEW")).length;
         let complete = raw.filter(r => r["Status"]?.toUpperCase().includes("COMPLETE")).length;
         let inprogress = raw.filter(r => r["Status"]?.toUpperCase().includes("INPROGRESS")).length;
+       let overdue = raw.filter(r => {
+         const expected = new Date(r["Expected End Date"]);
+         const now = new Date();
+         return !isNaN(expected) && expected < now;
+       }).length;
 
         document.getElementById("totalTasks").innerText = total;
         document.getElementById("completeTasks").innerText = complete;
-        document.getElementById("pendingTasks").innerText = pending;
+        document.getElementById("overdueTasks").innerText = overdue;
+        document.getElementById("needsReviewTasks").innerText = needsReview;
         document.getElementById("inprogressTasks").innerText = inprogress;
 
         const columns = Object.keys(raw[0]).map(col => {
@@ -193,6 +200,15 @@
           columns: columns,
           scrollX: true,
           responsive: true,
+          
+createdRow: function (row, data, dataIndex) {
+  const expectedDate = new Date(data["Expected End Date"]);
+  const today = new Date();
+  if (!isNaN(expectedDate) && expectedDate < today) {
+    $(row).css('background-color', '#ffe6e6'); // light red background
+  }
+},
+
           dom: 'Bfrtip',
           buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
           initComplete: function () {
