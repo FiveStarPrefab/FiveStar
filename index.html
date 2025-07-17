@@ -225,5 +225,37 @@ createdRow: function (row, data, dataIndex) {
       }
     });
   </script>
+
+<script>
+function populateBuildingFilter(table) {
+  const buildingColIndex = table.column("Building Level:name").index();
+  const data = table.column(buildingColIndex).data().toArray();
+  const uniqueValues = [...new Set(data)].filter(Boolean).sort();
+  const select = document.getElementById("buildingFilter");
+
+  uniqueValues.forEach(val => {
+    const option = document.createElement("option");
+    option.value = val;
+    option.textContent = val;
+    select.appendChild(option);
+  });
+
+  select.addEventListener("change", () => {
+    const value = select.value;
+    table.column(buildingColIndex).search(value ? '^' + value + '$' : '', true, false).draw();
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const interval = setInterval(() => {
+    if (window.jQuery && $.fn.dataTable.isDataTable('#dashboardTable')) {
+      const table = $('#dashboardTable').DataTable();
+      populateBuildingFilter(table);
+      clearInterval(interval);
+    }
+  }, 200);
+});
+</script>
 </body>
+
 </html>
