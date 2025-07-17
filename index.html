@@ -142,7 +142,12 @@
     function createStatusBadge(val) {
       if (!val) return "";
       let cls = val.toUpperCase().replace(/\s/g, '');
-      return `<span class='status-badge ${cls}'>${val}</span>`;
+      if (cls === 'COMPLETE') return `<span class='status-badge COMPLETE'>✅ ${val}</span>`;
+     if (cls === 'INPROGRESS') return `<span class='status-badge INPROGRESS'>🔄 ${val}</span>`;
+     if (cls === 'NEEDSREVIEW') return `<span class='status-badge NEEDSREVIEW'>🛠️ ${val}</span>`;
+     if (cls === 'READYTOSHIP') return `<span class='status-badge READYTOSHIP'>📤 ${val}</span>`;
+     if (cls === 'BLOCKED') return `<span class='status-badge BLOCKED'>⛔ ${val}</span>`;
+     return `<span class='status-badge ${cls}'>${val}</span>`;
     }
 
     function createPriorityTag(val) {
