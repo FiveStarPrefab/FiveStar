@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>C1 Level Live Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" 
+        href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; }
+  </style>
+</head>
+<body>
+  <h2>C1 Level Workflow Dashboard (Live from Google Sheets)</h2>
+  <table id="dashboard" class="display"></table>
+
+  <script>
+    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR1iPOsj_fVoAXAqnCD3JKDuNtzgj9gSkHYqP1kbBH4-O598458EaB0T8fOTrcDxhEIgPbTHPd4G5Eq/pub?gid=1736456295&single=true&output=csv", {
+      download: true,
+      header: true,
+      complete: function(results) {
+        const data = results.data;
+        const columns = Object.keys(data[0]).map(col => ({ title: col, data: col }));
+        $('#dashboard').DataTable({
+          data: data,
+          columns: columns
+        });
+      }
+    });
+  </script>
+</body>
+</html>
