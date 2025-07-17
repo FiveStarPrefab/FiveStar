@@ -7,9 +7,9 @@
   <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <link rel="stylesheet" 
+  <link rel="stylesheet"
         href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" 
+  <link rel="stylesheet"
         href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
@@ -40,9 +40,34 @@
       font-size: 1.8em;
       margin: 0;
     }
+    .summary-metrics {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px auto;
+      max-width: 800px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .summary-box {
+      text-align: center;
+    }
+    .summary-box h3 {
+      margin: 5px 0;
+      color: #007bff;
+    }
+    .summary-box span {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+    }
     table.dataTable thead {
       background-color: #007bff;
       color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
     table.dataTable tbody tr:nth-child(even) {
       background-color: #f9f9f9;
@@ -80,6 +105,9 @@
       font-size: 0.75em;
       line-height: 18px;
     }
+    .priority-high { background: #dc3545; color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.8em; }
+    .priority-medium { background: #ffc107; color: black; padding: 4px 8px; border-radius: 5px; font-size: 0.8em; }
+    .priority-low { background: #28a745; color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.8em; }
     tfoot input {
       width: 100%;
       padding: 3px;
@@ -91,6 +119,13 @@
   <div class="branding">
     <img src="five_star_logo.png" alt="Five Star Electric Logo">
     <h2>Five Star Electric - C1 Workflow Dashboard</h2>
+  </div>
+
+  <div class="summary-metrics">
+    <div class="summary-box"><h3>Total Tasks</h3><span id="totalTasks">0</span></div>
+    <div class="summary-box"><h3>Completed</h3><span id="completeTasks">0</span></div>
+    <div class="summary-box"><h3>Pending</h3><span id="pendingTasks">0</span></div>
+    <div class="summary-box"><h3>In Progress</h3><span id="inprogressTasks">0</span></div>
   </div>
 
   <table id="dashboard" class="display nowrap" style="width:100%">
@@ -110,11 +145,30 @@
       return `<span class='status-badge ${cls}'>${val}</span>`;
     }
 
-    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vR1iPOsj_fVoAXAqnCD3JKDuNtzgj9gSkHYqP1kbBH4-O598458EaB0T8fOTrcDxhEIgPbTHPd4G5Eq/pub?gid=1736456295&single=true&output=csv", {
+    function createPriorityTag(val) {
+      if (!val) return "";
+      let tag = val.toLowerCase();
+      if (tag.includes("high")) return `<span class='priority-high'>${val}</span>`;
+      if (tag.includes("medium")) return `<span class='priority-medium'>${val}</span>`;
+      if (tag.includes("low")) return `<span class='priority-low'>${val}</span>`;
+      return val;
+    }
+
+    Papa.parse("c1_level_dashboard_with_progress.csv", {
       download: true,
       header: true,
       complete: function(results) {
         const raw = results.data.filter(row => Object.values(row).some(cell => cell));
+        let total = raw.length;
+        let pending = raw.filter(r => r["Status"]?.toUpperCase().includes("PENDING")).length;
+        let complete = raw.filter(r => r["Status"]?.toUpperCase().includes("COMPLETE")).length;
+        let inprogress = raw.filter(r => r["Status"]?.toUpperCase().includes("INPROGRESS")).length;
+
+        document.getElementById("totalTasks").innerText = total;
+        document.getElementById("completeTasks").innerText = complete;
+        document.getElementById("pendingTasks").innerText = pending;
+        document.getElementById("inprogressTasks").innerText = inprogress;
+
         const columns = Object.keys(raw[0]).map(col => {
           return {
             title: col,
@@ -122,6 +176,7 @@
             render: function(data, type, row) {
               if (col.toLowerCase().includes('status')) return createStatusBadge(data);
               if (col.toLowerCase().includes('progress') || col.includes('%')) return createProgressBar(data);
+              if (col.toLowerCase().includes('priority')) return createPriorityTag(data);
               return data;
             }
           };
