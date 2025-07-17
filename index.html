@@ -121,33 +121,7 @@
     <h2>Five Star Electric - C1 Workflow Dashboard</h2>
   </div>
 
-  
-<button id="fieldToggleBtn" style="margin: 15px; padding: 8px 16px; font-size: 0.9em; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-  Toggle Field View
-</button>
-
-<script>
-let fieldMode = false;
-let fieldColumnsToHide = [];
-
-function setFieldColumns(api) {
-  const headers = api.columns().header().toArray();
-  fieldColumnsToHide = headers
-    .map((th, i) => ({ text: th.innerText.trim().toLowerCase(), index: i }))
-    .filter(col => !['task', 'status', 'due date', 'expected end date', 'assigned to', 'ball in court', 'progress %', 'comments'].includes(col.text))
-    .map(col => col.index);
-}
-
-function toggleFieldView(table) {
-  fieldMode = !fieldMode;
-  fieldColumnsToHide.forEach(colIndex => {
-    const visible = !fieldMode;
-    table.column(colIndex).visible(visible);
-  });
-}
-</script>
-
-<div class="summary-metrics">
+  <div class="summary-metrics">
     <div class="summary-box"><h3>📋 Total Tasks</h3><span id="totalTasks">0</span></div>
     <div class="summary-box"><h3>🔄 In Progress</h3><span id="inprogressTasks">0</span></div>
     <div class="summary-box"><h3>🛠️ Needs Review</h3><span id="needsReviewTasks">0</span></div>
