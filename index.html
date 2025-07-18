@@ -124,7 +124,7 @@
 <body>
   <div class="branding">
     <img src="five_star_logo.png" alt="Five Star Electric Logo">
-    <h2>Five Star Electric - C1 Workflow Dashboard</h2>
+    <h2 style="font-weight:bold; text-shadow:2px 2px 6px rgba(0,0,0,0.6);">Five Star Electric BBJ Prefab and Logistics Dashboard</h2>
   </div>
 
   <div class="summary-metrics">
@@ -262,6 +262,26 @@ window.addEventListener("DOMContentLoaded", () => {
   }, 200);
 });
 </script>
+
+<script>
+  function updateUrgentCount(table) {
+    const urgentColIndex = table.column("Status:name").index();
+    const urgentCount = table.column(urgentColIndex).data().toArray()
+      .filter(v => v.toLowerCase().includes("urgent")).length;
+    document.getElementById("urgent-count").textContent = urgentCount;
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const interval = setInterval(() => {
+      if (window.jQuery && $.fn.dataTable.isDataTable('#dashboardTable')) {
+        const table = $('#dashboardTable').DataTable();
+        updateUrgentCount(table);
+        clearInterval(interval);
+      }
+    }, 200);
+  });
+</script>
 </body>
+
 
 </html>
